@@ -26,50 +26,51 @@ export const getStoryById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    let userId = null;
+    const token = req.cookies?.access_token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userId = decoded.id;
+      } catch {
+        userId = null;
+      }
+    }
+
     const storyQuery = `
       SELECT s.id, s.title, s.user_id, s.created_at, 
              u.username AS author,
-             (SELECT COUNT(*)::int FROM votes v WHERE v.story_id = s.id) AS votes
+             (SELECT COUNT(*)::int FROM votes v WHERE v.story_id = s.id) AS votes,
+             EXISTS (
+               SELECT 1 FROM votes v WHERE v.story_id = s.id AND v.user_id = $2
+             ) AS "userHasVoted"
       FROM stories s
       JOIN users u ON s.user_id = u.id
       WHERE s.id = $1
     `;
-    const storyResult = await db.query(storyQuery, [id]);
+    const storyResult = await db.query(storyQuery, [id, userId]);
     if (storyResult.rows.length === 0) {
       return res.status(404).json({ error: "Story not found" });
     }
     const story = storyResult.rows[0];
 
-    // paragraphs with votes
+    // paragraphs with votes + userHasVoted
     const paraQuery = `
       SELECT p.id, p.content, p.created_at, p.user_id, 
              u.username AS author,
-             (SELECT COUNT(*)::int FROM paragraph_votes pv WHERE pv.paragraph_id = p.id) AS votes
+             (SELECT COUNT(*)::int FROM paragraph_votes pv WHERE pv.paragraph_id = p.id) AS votes,
+             EXISTS (
+               SELECT 1 FROM paragraph_votes pv WHERE pv.paragraph_id = p.id AND pv.user_id = $2
+             ) AS "userHasVoted"
       FROM paragraphs p
       JOIN users u ON p.user_id = u.id
       WHERE p.story_id = $1
       ORDER BY p.created_at ASC
     `;
-    const paraResult = await db.query(paraQuery, [id]);
+    const paraResult = await db.query(paraQuery, [id, userId]);
     story.paragraphs = paraResult.rows;
 
-    // check if current user has voted
-    let userHasVoted = false;
-    const token = req.cookies?.access_token;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const check = await db.query(
-          "SELECT 1 FROM votes WHERE story_id = $1 AND user_id = $2",
-          [id, decoded.id]
-        );
-        userHasVoted = check.rows.length > 0;
-      } catch {
-        // invalid/expired token → ignore
-      }
-    }
-
-    return res.json({ ...story, userHasVoted });
+    return res.json(story);
   } catch (err) {
     console.error("Error fetching story by id:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -147,7 +148,8 @@ export const addParagraph = async (req, res) => {
     const paraWithMeta = await db.query(
       `
       SELECT p.id, p.story_id, p.user_id, p.content, p.created_at, u.username AS author,
-      (SELECT COUNT(*)::int FROM paragraph_votes pv WHERE pv.paragraph_id = p.id) AS votes
+      (SELECT COUNT(*)::int FROM paragraph_votes pv WHERE pv.paragraph_id = p.id) AS votes,
+      FALSE AS "userHasVoted"
       FROM paragraphs p
       JOIN users u ON p.user_id = u.id
       WHERE p.id = $1

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 
-// Vite-safe env handling (fallback to localhost if not set)
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const StoryDetail = () => {
@@ -13,9 +12,7 @@ const StoryDetail = () => {
   const [newParagraph, setNewParagraph] = useState("");
 
   const fetchStory = () => {
-    fetch(`${API_BASE}/api/stories/${id}`, {
-      credentials: "include",
-    })
+    fetch(`${API_BASE}/api/stories/${id}`, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setStory(data))
       .catch((err) => console.error("Error fetching story:", err));
@@ -25,41 +22,43 @@ const StoryDetail = () => {
     fetchStory();
   }, [id]);
 
+  // --- STORY VOTE ---
   const handleVote = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/votes/${id}`, {
         method: "POST",
         credentials: "include",
       });
-      await res.json();
-      fetchStory();
+      if (!res.ok) throw new Error("Vote failed");
+      const data = await res.json(); // { votes, userHasVoted }
+      setStory((prev) =>
+        prev ? { ...prev, votes: data.votes, userHasVoted: data.userHasVoted } : prev
+      );
     } catch (err) {
       console.error("Error voting:", err);
     }
   };
 
+  // --- PARAGRAPH VOTE ---
   const handleParagraphVote = async (paraId) => {
     try {
       const res = await fetch(`${API_BASE}/api/paragraph-votes/${paraId}`, {
         method: "POST",
         credentials: "include",
       });
+      if (!res.ok) throw new Error("Paragraph vote failed");
+      const data = await res.json(); // { votes, userHasVoted }
 
-      if (!res.ok) throw new Error("Failed to vote paragraph");
-      const updatedPara = await res.json();
-
-      setStory((prev) => ({
-        ...prev,
-        paragraphs: prev.paragraphs.map((p) =>
-          p.id === paraId
-            ? {
-                ...p,
-                votes: updatedPara.votes,
-                userHasVoted: updatedPara.userHasVoted,
-              }
-            : p
-        ),
-      }));
+      setStory((prev) =>
+        prev
+          ? {
+              ...prev,
+              paragraphs: prev.paragraphs.map((p) =>
+                p.id === paraId ? { ...p, votes: data.votes, userHasVoted: data.userHasVoted } : p
+              ),
+            }
+          : prev
+      );
     } catch (err) {
       console.error("Error voting paragraph:", err);
     }
@@ -71,9 +70,8 @@ const StoryDetail = () => {
         method: "DELETE",
         credentials: "include",
       });
-      if (res.ok) {
-        navigate("/");
-      } else {
+      if (res.ok) navigate("/");
+      else {
         const errData = await res.json();
         alert(errData.error || "Failed to delete story");
       }
@@ -88,9 +86,8 @@ const StoryDetail = () => {
         method: "DELETE",
         credentials: "include",
       });
-      if (res.ok) {
-        fetchStory();
-      } else {
+      if (res.ok) fetchStory();
+      else {
         const errData = await res.json();
         alert(errData.error || "Failed to delete paragraph");
       }
@@ -102,20 +99,14 @@ const StoryDetail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newParagraph.trim()) return;
-
     try {
       const res = await fetch(`${API_BASE}/api/stories/${id}/paragraphs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          user_id: currentUser?.id,
-          content: newParagraph,
-        }),
+        body: JSON.stringify({ content: newParagraph }),
       });
-
       if (!res.ok) throw new Error("Failed to add paragraph");
-
       setNewParagraph("");
       fetchStory();
     } catch (err) {
@@ -133,16 +124,14 @@ const StoryDetail = () => {
         {new Date(story.created_at).toLocaleDateString()}
       </p>
 
-      {/* Votes + Delete story */}
+      {/* Story votes */}
       <div className="flex items-center gap-4 mb-6">
         <p className="text-yellow-600 font-semibold">⭐ {story.votes} votes</p>
         {currentUser && (
           <button
             onClick={handleVote}
             className={`px-4 py-1 rounded ${
-              story.userHasVoted
-                ? "bg-yellow-600 text-white"
-                : "bg-gray-200 text-gray-700"
+              story.userHasVoted ? "bg-yellow-600 text-white" : "bg-gray-200 text-gray-700"
             }`}
           >
             {story.userHasVoted ? "Unvote" : "Vote"}
@@ -158,11 +147,10 @@ const StoryDetail = () => {
         )}
       </div>
 
+      {/* Paragraphs */}
       <h3 className="text-xl font-bold mb-4">Story Content</h3>
       {story.paragraphs.length === 0 ? (
-        <p className="text-gray-500">
-          No paragraphs yet. Be the first to contribute!
-        </p>
+        <p className="text-gray-500">No paragraphs yet. Be the first to contribute!</p>
       ) : (
         story.paragraphs.map((p) => (
           <div key={p.id} className="p-4 mb-4 bg-white shadow rounded-lg">
@@ -175,9 +163,7 @@ const StoryDetail = () => {
               <button
                 onClick={() => handleParagraphVote(p.id)}
                 className={`mt-2 px-4 py-1 rounded ${
-                  p.userHasVoted
-                    ? "bg-yellow-600 text-white"
-                    : "bg-gray-200 text-gray-700"
+                  p.userHasVoted ? "bg-yellow-600 text-white" : "bg-gray-200 text-gray-700"
                 }`}
               >
                 {p.userHasVoted ? "Unvote" : "Vote"} ({p.votes})
@@ -196,14 +182,13 @@ const StoryDetail = () => {
         ))
       )}
 
+      {/* Contribution form */}
       {currentUser ? (
         <form
           onSubmit={handleSubmit}
           className="mt-8 p-6 bg-gray-100 rounded-lg shadow"
         >
-          <h4 className="text-lg font-semibold mb-4">
-            ✍️ Contribute to this Story
-          </h4>
+          <h4 className="text-lg font-semibold mb-4">✍️ Contribute to this Story</h4>
           <textarea
             value={newParagraph}
             onChange={(e) => setNewParagraph(e.target.value)}
@@ -219,9 +204,7 @@ const StoryDetail = () => {
           </button>
         </form>
       ) : (
-        <p className="mt-6 text-red-500">
-          🚫 You must be logged in to contribute to this story.
-        </p>
+        <p className="mt-6 text-red-500">🚫 You must be logged in to contribute to this story.</p>
       )}
     </div>
   );
