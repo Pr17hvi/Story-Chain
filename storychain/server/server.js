@@ -49,8 +49,8 @@ if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "client", "dist"); // adjust if different
   app.use(express.static(frontendPath));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(frontendPath, "index.html"));
+  app.get("/*", (req, res) => {
+    res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
   });
 }
 
