@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "postinstall": "cd ../client && npm install && npm run build",
+    "postinstall": "cd ../storychain/client && npm install && npm run build",
     "dev": "nodemon server.js"
   },
   "keywords": [],
@@ -18,7 +18,7 @@
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
+    "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3"
