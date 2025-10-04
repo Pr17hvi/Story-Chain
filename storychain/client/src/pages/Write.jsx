@@ -3,9 +3,8 @@ import { AuthContext } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../utils/apiClient";
 
-
 const Write = () => {
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, token } = useContext(AuthContext);
   const [inputs, setInputs] = useState({ title: "", content: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -21,12 +20,12 @@ const Write = () => {
     try {
       const res = await fetch(`${API_BASE}/stories`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         credentials: "include",
-        body: JSON.stringify({
-          title: inputs.title,
-          content: inputs.content,
-        }),
+        body: JSON.stringify(inputs),
       });
 
       if (!res.ok) {

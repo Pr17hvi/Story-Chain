@@ -6,7 +6,7 @@ import {
   addParagraph,
   deleteStory,
   deleteParagraph,
-} from "../controllers/stories.js";   // ✅ fixed path
+} from "../controllers/stories.js";
 
 import verifyToken from "../middleware/verifyToken.js";
 

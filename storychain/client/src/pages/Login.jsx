@@ -17,7 +17,7 @@ const Login = () => {
     setError("");
 
     try {
-      await login(inputs);
+      await login(inputs); // context stores user + token
       navigate("/");
     } catch (err) {
       if (err.response?.data?.error) {

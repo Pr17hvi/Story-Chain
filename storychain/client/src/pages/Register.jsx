@@ -3,12 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 
 const Register = () => {
-  const [inputs, setInputs] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
-
+  const [inputs, setInputs] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,8 +19,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(inputs); // register also sets currentUser
-      // If you want user to stay logged in after register, redirect to home:
+      await register(inputs); // context stores user + token
       navigate("/");
     } catch (err) {
       const msg =
@@ -82,9 +76,7 @@ const Register = () => {
           </button>
         </form>
 
-        {error && (
-          <p className="mt-4 text-red-500 text-center text-sm">{error}</p>
-        )}
+        {error && <p className="mt-4 text-red-500 text-center text-sm">{error}</p>}
 
         <p className="mt-4 text-center text-sm">
           Already have an account?{" "}

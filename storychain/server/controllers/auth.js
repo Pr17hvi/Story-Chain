@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import db from "../db.js"; // Postgres pool
+import db from "../db.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -14,7 +14,6 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    // Check if username OR email already exists
     const existing = await db.query(
       "SELECT * FROM users WHERE username = $1 OR email = $2",
       [username, email]
@@ -47,15 +46,15 @@ export const register = async (req, res) => {
         sameSite: isProduction ? "none" : "lax",
       })
       .status(201)
-      .json({ user: newUser.rows[0] });
+      .json({
+        user: newUser.rows[0],
+        token, // also send token in body for client-side storage
+      });
   } catch (err) {
     console.error("❌ Register error:", err.message || err);
-
-    // Handle Postgres duplicate email/username
     if (err.code === "23505") {
       return res.status(400).json({ error: "Email or username already registered" });
     }
-
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -97,6 +96,7 @@ export const login = async (req, res) => {
       .status(200)
       .json({
         user: { id: user.id, username: user.username, email: user.email },
+        token, // send token in response body too
       });
   } catch (err) {
     console.error("❌ Login error:", err.message || err);
