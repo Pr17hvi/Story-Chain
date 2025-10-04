@@ -12,7 +12,7 @@ const StoryDetail = () => {
   const [newParagraph, setNewParagraph] = useState("");
 
   const fetchStory = () => {
-    fetch(`${API_BASE}/api/stories/${id}`, { credentials: "include" })
+    fetch(`${API_BASE}/stories/${id}`, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setStory(data))
       .catch((err) => console.error("Error fetching story:", err));
@@ -25,7 +25,7 @@ const StoryDetail = () => {
   // --- STORY VOTE ---
   const handleVote = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/votes/${id}`, {
+      const res = await fetch(`${API_BASE}/votes/${id}`, {
         method: "POST",
         credentials: "include",
       });
@@ -42,7 +42,7 @@ const StoryDetail = () => {
   // --- PARAGRAPH VOTE ---
   const handleParagraphVote = async (paraId) => {
     try {
-      const res = await fetch(`${API_BASE}/api/paragraph-votes/${paraId}`, {
+      const res = await fetch(`${API_BASE}/paragraph-votes/${paraId}`, {
         method: "POST",
         credentials: "include",
       });
@@ -66,7 +66,7 @@ const StoryDetail = () => {
 
   const handleDeleteStory = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/stories/${id}`, {
+      const res = await fetch(`${API_BASE}/stories/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -82,7 +82,7 @@ const StoryDetail = () => {
 
   const handleDeleteParagraph = async (paraId) => {
     try {
-      const res = await fetch(`${API_BASE}/api/stories/paragraphs/${paraId}`, {
+      const res = await fetch(`${API_BASE}/stories/paragraphs/${paraId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -100,7 +100,7 @@ const StoryDetail = () => {
     e.preventDefault();
     if (!newParagraph.trim()) return;
     try {
-      const res = await fetch(`${API_BASE}/api/stories/${id}/paragraphs`, {
+      const res = await fetch(`${API_BASE}/stories/${id}/paragraphs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

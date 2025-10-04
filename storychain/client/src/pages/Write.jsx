@@ -19,7 +19,7 @@ const Write = () => {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/stories`, {
+      const res = await fetch(`${API_BASE}/stories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // include JWT cookie

@@ -19,7 +19,7 @@ export const AuthContextProvider = ({ children }) => {
   // LOGIN
   const login = async (inputs) => {
     try {
-      const res = await axios.post("/api/auth/login", inputs);
+      const res = await axios.post("/auth/login", inputs);
       setCurrentUser(res.data.user);
       return res.data;
     } catch (err) {
@@ -31,7 +31,7 @@ export const AuthContextProvider = ({ children }) => {
   // REGISTER
   const register = async (inputs) => {
     try {
-      const res = await axios.post("/api/auth/register", inputs);
+      const res = await axios.post("/auth/register", inputs);
       return res.data;
     } catch (err) {
       console.error("❌ Register error:", err.response?.data || err.message);
@@ -42,7 +42,7 @@ export const AuthContextProvider = ({ children }) => {
   // LOGOUT
   const logout = async () => {
     try {
-      await axios.post("/api/auth/logout");
+      await axios.post("/auth/logout");
       setCurrentUser(null);
       localStorage.removeItem("user");
     } catch (err) {
