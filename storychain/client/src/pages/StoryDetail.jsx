@@ -3,21 +3,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 import { API_BASE } from "../utils/apiClient";
 
-
 const StoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, token } = useContext(AuthContext);
   const [story, setStory] = useState(null);
   const [newParagraph, setNewParagraph] = useState("");
 
   const fetchStory = async () => {
     try {
-      const res = await fetch(`${API_BASE}/stories/${id}`, { credentials: "include" });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `Status ${res.status}`);
-      }
+      const res = await fetch(`${API_BASE}/stories/${id}`, {
+        credentials: "include",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setStory(data);
     } catch (err) {
@@ -28,18 +27,17 @@ const StoryDetail = () => {
 
   useEffect(() => {
     fetchStory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, token]);
 
-  // --- STORY VOTE ---
   const handleVote = async () => {
     try {
       const res = await fetch(`${API_BASE}/votes/${id}`, {
         method: "POST",
         credentials: "include",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (!res.ok) throw new Error("Vote failed");
-      const data = await res.json(); // { votes, userHasVoted }
+      const data = await res.json();
       setStory((prev) =>
         prev ? { ...prev, votes: data.votes, userHasVoted: data.userHasVoted } : prev
       );
@@ -48,16 +46,15 @@ const StoryDetail = () => {
     }
   };
 
-  // --- PARAGRAPH VOTE ---
   const handleParagraphVote = async (paraId) => {
     try {
       const res = await fetch(`${API_BASE}/paragraph-votes/${paraId}`, {
         method: "POST",
         credentials: "include",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (!res.ok) throw new Error("Paragraph vote failed");
-      const data = await res.json(); // { votes, userHasVoted }
-
+      const data = await res.json();
       setStory((prev) =>
         prev
           ? {
@@ -78,12 +75,10 @@ const StoryDetail = () => {
       const res = await fetch(`${API_BASE}/stories/${id}`, {
         method: "DELETE",
         credentials: "include",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (res.ok) navigate("/");
-      else {
-        const errData = await res.json();
-        alert(errData.error || "Failed to delete story");
-      }
+      else alert((await res.json()).error || "Failed to delete story");
     } catch (err) {
       console.error("Error deleting story:", err);
     }
@@ -94,12 +89,10 @@ const StoryDetail = () => {
       const res = await fetch(`${API_BASE}/stories/paragraphs/${paraId}`, {
         method: "DELETE",
         credentials: "include",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (res.ok) fetchStory();
-      else {
-        const errData = await res.json();
-        alert(errData.error || "Failed to delete paragraph");
-      }
+      else alert((await res.json()).error || "Failed to delete paragraph");
     } catch (err) {
       console.error("Error deleting paragraph:", err);
     }
@@ -111,7 +104,10 @@ const StoryDetail = () => {
     try {
       const res = await fetch(`${API_BASE}/stories/${id}/paragraphs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         credentials: "include",
         body: JSON.stringify({ content: newParagraph }),
       });
@@ -133,7 +129,6 @@ const StoryDetail = () => {
         {new Date(story.created_at).toLocaleDateString()}
       </p>
 
-      {/* Story votes */}
       <div className="flex items-center gap-4 mb-6">
         <p className="text-yellow-600 font-semibold">⭐ {story.votes} votes</p>
         {currentUser && (
@@ -156,7 +151,6 @@ const StoryDetail = () => {
         )}
       </div>
 
-      {/* Paragraphs */}
       <h3 className="text-xl font-bold mb-4">Story Content</h3>
       {story.paragraphs.length === 0 ? (
         <p className="text-gray-500">No paragraphs yet. Be the first to contribute!</p>
@@ -191,12 +185,8 @@ const StoryDetail = () => {
         ))
       )}
 
-      {/* Contribution form */}
       {currentUser ? (
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 p-6 bg-gray-100 rounded-lg shadow"
-        >
+        <form onSubmit={handleSubmit} className="mt-8 p-6 bg-gray-100 rounded-lg shadow">
           <h4 className="text-lg font-semibold mb-4">✍️ Contribute to this Story</h4>
           <textarea
             value={newParagraph}

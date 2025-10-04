@@ -1,13 +1,11 @@
 import { useEffect, useState, createContext, useContext } from "react";
 import axios from "axios";
+import { API_BASE } from "../utils/apiClient";
 
 export const AuthContext = createContext();
 
-import { API_BASE } from "../utils/apiClient";
-
 axios.defaults.baseURL = API_BASE;
 axios.defaults.withCredentials = true;
-
 
 export const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -21,11 +19,23 @@ export const AuthContextProvider = ({ children }) => {
     return null;
   });
 
+  const [token, setToken] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("token") || null;
+    }
+    return null;
+  });
+
   // LOGIN
   const login = async (inputs) => {
     try {
-      const res = await axios.post("/auth/login", inputs);
+      const res = await axios.post("/auth/login", inputs, { withCredentials: true });
       setCurrentUser(res.data.user);
+      setToken(res.data.token);
+
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("token", res.data.token);
+
       return res.data;
     } catch (err) {
       console.error("❌ Login error:", err.response?.data || err.message);
@@ -33,12 +43,16 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
-  // REGISTER (sets user because backend returns cookie + user)
+  // REGISTER
   const register = async (inputs) => {
     try {
-      const res = await axios.post("/auth/register", inputs);
-      // backend returns { user: {...} } and sets cookie
+      const res = await axios.post("/auth/register", inputs, { withCredentials: true });
       setCurrentUser(res.data.user);
+      setToken(res.data.token);
+
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("token", res.data.token);
+
       return res.data;
     } catch (err) {
       console.error("❌ Register error:", err.response?.data || err.message);
@@ -50,27 +64,29 @@ export const AuthContextProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post("/auth/logout");
-      setCurrentUser(null);
-      if (typeof window !== "undefined") localStorage.removeItem("user");
     } catch (err) {
       console.error("❌ Logout error:", err.response?.data || err.message);
+    } finally {
+      setCurrentUser(null);
+      setToken(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
     }
   };
 
-  // Persist user across refresh
+  // Attach token to axios requests
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (currentUser) {
-      try {
-        localStorage.setItem("user", JSON.stringify(currentUser));
-      } catch {}
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      localStorage.removeItem("user");
+      delete axios.defaults.headers.common["Authorization"];
     }
-  }, [currentUser]);
+  }, [token]);
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, register, logout }}>
+    <AuthContext.Provider value={{ currentUser, token, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

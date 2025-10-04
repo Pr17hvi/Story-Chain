@@ -14,11 +14,11 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    // Check if user exists
     const existing = await db.query(
       "SELECT * FROM users WHERE username = $1 OR email = $2",
       [username, email]
     );
-
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: "User already exists" });
     }
@@ -48,7 +48,7 @@ export const register = async (req, res) => {
       .status(201)
       .json({
         user: newUser.rows[0],
-        token, // also send token in body for client-side storage
+        token, // ✅ send token explicitly
       });
   } catch (err) {
     console.error("❌ Register error:", err.message || err);
@@ -68,9 +68,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const userRes = await db.query("SELECT * FROM users WHERE username = $1", [
-      username,
-    ]);
+    const userRes = await db.query("SELECT * FROM users WHERE username = $1", [username]);
     if (userRes.rows.length === 0) {
       return res.status(400).json({ error: "User not found" });
     }
@@ -96,7 +94,7 @@ export const login = async (req, res) => {
       .status(200)
       .json({
         user: { id: user.id, username: user.username, email: user.email },
-        token, // send token in response body too
+        token, // ✅ send token explicitly
       });
   } catch (err) {
     console.error("❌ Login error:", err.message || err);

@@ -1,23 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
-
-// API root (backend origin) — do NOT include /api in VITE_API_URL
 import { API_BASE } from "../utils/apiClient";
-
+import { AuthContext } from "../context/authContext";
 
 const Home = () => {
   const [stories, setStories] = useState([]);
   const location = useLocation();
+  const { token } = useContext(AuthContext);
 
   useEffect(() => {
+    if (token === undefined) return; // wait for AuthContext init
+
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/stories`, { credentials: "include" });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || `Status ${res.status}`);
-        }
+        const res = await fetch(`${API_BASE}/stories`, {
+          credentials: "include",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         if (mounted) setStories(data);
       } catch (err) {
@@ -29,7 +32,7 @@ const Home = () => {
     return () => {
       mounted = false;
     };
-  }, [location]);
+  }, [location, token]);
 
   return (
     <div>
@@ -40,16 +43,10 @@ const Home = () => {
           Collaboratively create and vote on amazing stories.
         </p>
         <div className="flex justify-center gap-4">
-          <Link
-            to="/write"
-            className="px-6 py-3 bg-white text-indigo-600 rounded-lg shadow hover:bg-gray-200"
-          >
+          <Link to="/write" className="px-6 py-3 bg-white text-indigo-600 rounded-lg shadow hover:bg-gray-200">
             ✍️ Start Writing
           </Link>
-          <Link
-            to="/register"
-            className="px-6 py-3 bg-indigo-800 text-white rounded-lg shadow hover:bg-indigo-900"
-          >
+          <Link to="/register" className="px-6 py-3 bg-indigo-800 text-white rounded-lg shadow hover:bg-indigo-900">
             🚀 Join Now
           </Link>
         </div>
@@ -64,20 +61,14 @@ const Home = () => {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {stories.map((story) => (
-              <div
-                key={story.id}
-                className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition"
-              >
+              <div key={story.id} className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition">
                 <h3 className="text-lg font-bold text-indigo-600">{story.title}</h3>
                 <p className="mt-2 text-sm text-gray-600">By {story.author}</p>
                 <p className="mt-1 text-xs text-gray-500">
                   {new Date(story.created_at).toLocaleDateString()}
                 </p>
                 <p className="mt-2 text-sm text-gray-700">⭐ {story.votes} votes</p>
-                <Link
-                  to={`/stories/${story.id}`}
-                  className="mt-4 inline-block text-indigo-600 text-sm hover:underline"
-                >
+                <Link to={`/stories/${story.id}`} className="mt-4 inline-block text-indigo-600 text-sm hover:underline">
                   Read More →
                 </Link>
               </div>

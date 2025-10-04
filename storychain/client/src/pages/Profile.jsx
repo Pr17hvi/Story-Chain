@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
-
 import { API_BASE } from "../utils/apiClient";
-
+import { AuthContext } from "../context/authContext";
 
 const Profile = () => {
   const { username } = useParams();
   const [profile, setProfile] = useState(null);
+  const { token } = useContext(AuthContext);
 
   const fetchProfile = async () => {
     try {
       const res = await fetch(`${API_BASE}/users/${username}`, {
         credentials: "include",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `Status ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setProfile(data);
     } catch (err) {
@@ -27,13 +27,12 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [username]);
+  }, [username, token]);
 
   if (!profile) return <p className="text-center mt-10">Loading profile...</p>;
 
   return (
     <div className="container mx-auto px-6 py-12">
-      {/* User info */}
       <h2 className="text-3xl font-bold text-indigo-600 mb-2">
         {profile.user.username}’s Profile
       </h2>

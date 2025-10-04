@@ -1,11 +1,12 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/authContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../utils/apiClient";
 
-const Login = () => {
-  const [inputs, setInputs] = useState({ username: "", password: "" });
-  const [error, setError] = useState("");
-  const { login } = useContext(AuthContext);
+const Write = () => {
+  const { currentUser, token } = useContext(AuthContext);
+  const [inputs, setInputs] = useState({ title: "", content: "" });
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -14,73 +15,72 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(null);
 
     try {
-      await login(inputs); // context stores user + token
-      navigate("/");
+      const res = await fetch(`${API_BASE}/stories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(inputs),
+      });
+
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to create story");
+      const data = await res.json();
+      navigate(`/stories/${data.id}`);
     } catch (err) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
-      } else {
-        setError("⚠️ Login failed. Please try again.");
-      }
+      console.error("Error creating story:", err);
+      setError(err.message);
     }
   };
 
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg p-8 rounded-xl w-full max-w-sm border border-gray-200"
-      >
-        <h1 className="text-3xl font-bold mb-6 text-center text-indigo-600">
-          Welcome Back 👋
-        </h1>
-
-        <input
-          type="text"
-          placeholder="Username"
-          name="username"
-          onChange={handleChange}
-          value={inputs.username}
-          className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          name="password"
-          onChange={handleChange}
-          value={inputs.password}
-          className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          required
-        />
-
-        {error && (
-          <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
-        )}
-
-        <button
-          type="submit"
-          className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition"
-        >
-          Login
-        </button>
-
-        <p className="text-sm text-gray-600 mt-4 text-center">
-          Don’t have an account?{" "}
-          <Link
-            to="/register"
-            className="text-indigo-600 font-medium hover:underline"
-          >
-            Sign Up
-          </Link>
+  if (!currentUser) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-700 text-lg">
+          🚫 You must be logged in to write a story.
         </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-6 py-12 max-w-3xl">
+      <h1 className="text-3xl font-bold mb-6">✍️ Write a New Story</h1>
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg space-y-4">
+        <div>
+          <label className="block mb-1 font-semibold">Title</label>
+          <input
+            type="text"
+            name="title"
+            value={inputs.title}
+            onChange={handleChange}
+            placeholder="Enter story title..."
+            className="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1 font-semibold">Content</label>
+          <textarea
+            name="content"
+            value={inputs.content}
+            onChange={handleChange}
+            placeholder="Write your story here..."
+            rows="8"
+            className="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300"
+            required
+          />
+        </div>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          Publish Story
+        </button>
       </form>
     </div>
   );
 };
 
-export default Login;
+export default Write;

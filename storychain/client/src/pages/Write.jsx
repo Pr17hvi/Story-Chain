@@ -24,15 +24,10 @@ const Write = () => {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        credentials: "include",
         body: JSON.stringify(inputs),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: "Unknown" }));
-        throw new Error(errData.error || "Failed to create story");
-      }
-
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to create story");
       const data = await res.json();
       navigate(`/stories/${data.id}`);
     } catch (err) {
@@ -54,10 +49,7 @@ const Write = () => {
   return (
     <div className="container mx-auto px-6 py-12 max-w-3xl">
       <h1 className="text-3xl font-bold mb-6">✍️ Write a New Story</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-lg space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg space-y-4">
         <div>
           <label className="block mb-1 font-semibold">Title</label>
           <input
@@ -70,7 +62,6 @@ const Write = () => {
             required
           />
         </div>
-
         <div>
           <label className="block mb-1 font-semibold">Content</label>
           <textarea
@@ -81,15 +72,10 @@ const Write = () => {
             rows="8"
             className="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300"
             required
-          ></textarea>
+          />
         </div>
-
         {error && <p className="text-red-500 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-        >
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
           Publish Story
         </button>
       </form>
