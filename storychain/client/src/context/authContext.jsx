@@ -3,13 +3,11 @@ import axios from "axios";
 
 export const AuthContext = createContext();
 
-// API root (backend origin) — do NOT include /api in VITE_API_URL
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API_BASE = `${API_ROOT}/api`;
+import { API_BASE } from "../utils/apiClient";
 
-// Ensure axios always sends cookies + same base
 axios.defaults.baseURL = API_BASE;
 axios.defaults.withCredentials = true;
+
 
 export const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {

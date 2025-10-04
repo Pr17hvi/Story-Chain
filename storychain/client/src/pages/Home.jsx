@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 // API root (backend origin) — do NOT include /api in VITE_API_URL
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API_BASE = `${API_ROOT}/api`;
+import { API_BASE } from "../utils/apiClient";
+
 
 const Home = () => {
   const [stories, setStories] = useState([]);

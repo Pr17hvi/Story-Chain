@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
+import { API_BASE } from "../utils/apiClient";
 
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API_BASE = `${API_ROOT}/api`;
 
 const StoryDetail = () => {
   const { id } = useParams();
