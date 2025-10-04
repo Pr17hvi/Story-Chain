@@ -1,11 +1,9 @@
 import express from "express";
-import { toggleVote } from "../controllers/votes.js";
+import { toggleVote } from "../controllers/votes.js";   // ✅ fixed path
 import verifyToken from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-// Toggle a vote on a story by ID
-// POST /api/votes/:id
-router.post("/:id", verifyToken, toggleVote);
+router.post("/:id", verifyToken, toggleVote);  // keep original route
 
 export default router;

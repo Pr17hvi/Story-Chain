@@ -1,4 +1,3 @@
-// routes/stories.js
 import express from "express";
 import {
   getStories,
@@ -7,15 +6,15 @@ import {
   addParagraph,
   deleteStory,
   deleteParagraph,
-} from "../stories.js";
+} from "../controllers/stories.js";   // ✅ fixed path
 
-import verifyToken from "../verifyToken.js";
+import verifyToken from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
 router.get("/", getStories);
 router.get("/:id", getStoryById);
-router.post("/", verifyToken, createStory); // create story (auth required)
+router.post("/", verifyToken, createStory);
 router.post("/:id/paragraphs", verifyToken, addParagraph);
 router.delete("/:id", verifyToken, deleteStory);
 router.delete("/paragraph/:id", verifyToken, deleteParagraph);
