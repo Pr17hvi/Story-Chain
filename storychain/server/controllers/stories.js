@@ -8,15 +8,15 @@ export const getStories = async (req, res) => {
   try {
     const query = `
       SELECT s.id, s.title, s.created_at, u.username AS author,
-      (SELECT COUNT(*)::int FROM votes v WHERE v.story_id = s.id) AS votes
+        (SELECT COUNT(*)::int FROM votes v WHERE v.story_id = s.id) AS votes
       FROM stories s
-      JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       ORDER BY s.created_at DESC
     `;
     const result = await db.query(query);
     return res.json(result.rows);
   } catch (err) {
-    console.error("Error fetching stories:", err);
+    console.error("❌ Error fetching stories:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -45,7 +45,7 @@ export const getStoryById = async (req, res) => {
                SELECT 1 FROM votes v WHERE v.story_id = s.id AND v.user_id = $2
              ) AS "userHasVoted"
       FROM stories s
-      JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE s.id = $1
     `;
     const storyResult = await db.query(storyQuery, [id, userId]);
@@ -63,7 +63,7 @@ export const getStoryById = async (req, res) => {
                SELECT 1 FROM paragraph_votes pv WHERE pv.paragraph_id = p.id AND pv.user_id = $2
              ) AS "userHasVoted"
       FROM paragraphs p
-      JOIN users u ON p.user_id = u.id
+      LEFT JOIN users u ON p.user_id = u.id
       WHERE p.story_id = $1
       ORDER BY p.created_at ASC
     `;
@@ -72,7 +72,7 @@ export const getStoryById = async (req, res) => {
 
     return res.json(story);
   } catch (err) {
-    console.error("Error fetching story by id:", err);
+    console.error("❌ Error fetching story by id:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -115,7 +115,7 @@ export const createStory = async (req, res) => {
       firstParagraph: paraResult.rows[0],
     });
   } catch (err) {
-    console.error("Error creating story:", err);
+    console.error("❌ Error creating story:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -151,7 +151,7 @@ export const addParagraph = async (req, res) => {
       (SELECT COUNT(*)::int FROM paragraph_votes pv WHERE pv.paragraph_id = p.id) AS votes,
       FALSE AS "userHasVoted"
       FROM paragraphs p
-      JOIN users u ON p.user_id = u.id
+      LEFT JOIN users u ON p.user_id = u.id
       WHERE p.id = $1
       `,
       [result.rows[0].id]
@@ -159,7 +159,7 @@ export const addParagraph = async (req, res) => {
 
     return res.status(201).json(paraWithMeta.rows[0]);
   } catch (err) {
-    console.error("Error adding paragraph:", err);
+    console.error("❌ Error adding paragraph:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -189,7 +189,7 @@ export const deleteStory = async (req, res) => {
     await db.query("DELETE FROM stories WHERE id = $1", [id]);
     return res.json({ message: "Story deleted successfully" });
   } catch (err) {
-    console.error("Error deleting story:", err);
+    console.error("❌ Error deleting story:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -219,7 +219,7 @@ export const deleteParagraph = async (req, res) => {
     await db.query("DELETE FROM paragraphs WHERE id = $1", [id]);
     return res.json({ message: "Paragraph deleted successfully" });
   } catch (err) {
-    console.error("Error deleting paragraph:", err);
+    console.error("❌ Error deleting paragraph:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
