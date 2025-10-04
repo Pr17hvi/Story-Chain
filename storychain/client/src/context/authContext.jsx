@@ -3,8 +3,13 @@ import axios from "axios";
 
 export const AuthContext = createContext();
 
-// 👇 Define API base from env (works in dev + prod)
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// 👇 Define API base dynamically (Render or local)
+const API_BASE =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+// Ensure axios always sends cookies + same base
+axios.defaults.baseURL = API_BASE;
+axios.defaults.withCredentials = true;
 
 export const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(
@@ -14,12 +19,11 @@ export const AuthContextProvider = ({ children }) => {
   // LOGIN
   const login = async (inputs) => {
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/login`, inputs, {
-        withCredentials: true,
-      });
+      const res = await axios.post("/api/auth/login", inputs);
       setCurrentUser(res.data.user);
       return res.data;
     } catch (err) {
+      console.error("❌ Login error:", err.response?.data || err.message);
       throw err;
     }
   };
@@ -27,20 +31,23 @@ export const AuthContextProvider = ({ children }) => {
   // REGISTER
   const register = async (inputs) => {
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/register`, inputs, {
-        withCredentials: true,
-      });
+      const res = await axios.post("/api/auth/register", inputs);
       return res.data;
     } catch (err) {
+      console.error("❌ Register error:", err.response?.data || err.message);
       throw err;
     }
   };
 
   // LOGOUT
   const logout = async () => {
-    await axios.post(`${API_BASE}/api/auth/logout`, {}, { withCredentials: true });
-    setCurrentUser(null);
-    localStorage.removeItem("user");
+    try {
+      await axios.post("/api/auth/logout");
+      setCurrentUser(null);
+      localStorage.removeItem("user");
+    } catch (err) {
+      console.error("❌ Logout error:", err.response?.data || err.message);
+    }
   };
 
   // Persist user across refresh

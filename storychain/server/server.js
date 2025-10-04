@@ -19,16 +19,19 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware
+// ✅ Setup CORS
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? process.env.FRONTEND_URLS.split(",") // multiple URLs allowed
+    : ["http://localhost:5173"];
+
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL // e.g. "https://yourdomain.com"
-        : "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -46,7 +49,7 @@ app.get("/api/health", (req, res) => {
 
 // ✅ Serve frontend build in production
 if (process.env.NODE_ENV === "production") {
-  const frontendPath = path.join(__dirname, "../client/dist"); // <-- fix path
+  const frontendPath = path.join(__dirname, "../client/dist");
   app.use(express.static(frontendPath));
 
   app.get("*", (req, res) => {
