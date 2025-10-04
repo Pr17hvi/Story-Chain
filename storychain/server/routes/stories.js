@@ -1,3 +1,4 @@
+// routes/stories.js
 import express from "express";
 import {
   getStories,
@@ -6,27 +7,17 @@ import {
   addParagraph,
   deleteStory,
   deleteParagraph,
-} from "../controllers/stories.js";
-import verifyToken from "../middleware/verifyToken.js";
+} from "../stories.js";
+
+import verifyToken from "../verifyToken.js";
 
 const router = express.Router();
 
-// Get all stories
 router.get("/", getStories);
-
-// Get story by id
 router.get("/:id", getStoryById);
-
-// Create new story (requires login)
-router.post("/", verifyToken, createStory);
-
-// Add paragraph to story
+router.post("/", verifyToken, createStory); // create story (auth required)
 router.post("/:id/paragraphs", verifyToken, addParagraph);
-
-// Delete story
 router.delete("/:id", verifyToken, deleteStory);
-
-// Delete paragraph
-router.delete("/paragraphs/:id", verifyToken, deleteParagraph);
+router.delete("/paragraph/:id", verifyToken, deleteParagraph);
 
 export default router;

@@ -3,9 +3,9 @@ import axios from "axios";
 
 export const AuthContext = createContext();
 
-// 👇 Define API base dynamically (Render or local)
-const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// API root (backend origin) — do NOT include /api in VITE_API_URL
+const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = `${API_ROOT}/api`;
 
 // Ensure axios always sends cookies + same base
 axios.defaults.baseURL = API_BASE;
@@ -14,7 +14,11 @@ axios.defaults.withCredentials = true;
 export const AuthContextProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
     if (typeof window !== "undefined") {
-      return JSON.parse(localStorage.getItem("user")) || null;
+      try {
+        return JSON.parse(localStorage.getItem("user")) || null;
+      } catch {
+        return null;
+      }
     }
     return null;
   });
@@ -31,11 +35,12 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
-  // REGISTER (✅ now sets user immediately because backend issues cookie)
+  // REGISTER (sets user because backend returns cookie + user)
   const register = async (inputs) => {
     try {
       const res = await axios.post("/auth/register", inputs);
-      setCurrentUser(res.data.user); // ✅ keep user in state
+      // backend returns { user: {...} } and sets cookie
+      setCurrentUser(res.data.user);
       return res.data;
     } catch (err) {
       console.error("❌ Register error:", err.response?.data || err.message);
@@ -48,7 +53,7 @@ export const AuthContextProvider = ({ children }) => {
     try {
       await axios.post("/auth/logout");
       setCurrentUser(null);
-      localStorage.removeItem("user");
+      if (typeof window !== "undefined") localStorage.removeItem("user");
     } catch (err) {
       console.error("❌ Logout error:", err.response?.data || err.message);
     }
@@ -56,8 +61,11 @@ export const AuthContextProvider = ({ children }) => {
 
   // Persist user across refresh
   useEffect(() => {
+    if (typeof window === "undefined") return;
     if (currentUser) {
-      localStorage.setItem("user", JSON.stringify(currentUser));
+      try {
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      } catch {}
     } else {
       localStorage.removeItem("user");
     }
@@ -70,5 +78,4 @@ export const AuthContextProvider = ({ children }) => {
   );
 };
 
-// ✅ Custom hook for consuming auth
 export const useAuth = () => useContext(AuthContext);

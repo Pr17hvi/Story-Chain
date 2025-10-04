@@ -2,7 +2,8 @@ import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = `${API_ROOT}/api`;
 
 const Write = () => {
   const { currentUser } = useContext(AuthContext);
@@ -22,7 +23,7 @@ const Write = () => {
       const res = await fetch(`${API_BASE}/stories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // include JWT cookie
+        credentials: "include",
         body: JSON.stringify({
           title: inputs.title,
           content: inputs.content,
@@ -30,14 +31,11 @@ const Write = () => {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
+        const errData = await res.json().catch(() => ({ error: "Unknown" }));
         throw new Error(errData.error || "Failed to create story");
       }
 
       const data = await res.json();
-      console.log("✅ Story created:", data);
-
-      // Redirect to the new story page
       navigate(`/stories/${data.id}`);
     } catch (err) {
       console.error("Error creating story:", err);
@@ -62,7 +60,6 @@ const Write = () => {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-lg shadow-lg space-y-4"
       >
-        {/* Title */}
         <div>
           <label className="block mb-1 font-semibold">Title</label>
           <input
@@ -76,7 +73,6 @@ const Write = () => {
           />
         </div>
 
-        {/* Content */}
         <div>
           <label className="block mb-1 font-semibold">Content</label>
           <textarea
@@ -90,10 +86,8 @@ const Write = () => {
           ></textarea>
         </div>
 
-        {/* Error message */}
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Submit */}
         <button
           type="submit"
           className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"

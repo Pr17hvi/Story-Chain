@@ -24,8 +24,9 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(inputs); // call AuthContext.register
-      navigate("/login"); // redirect to login
+      await register(inputs); // register also sets currentUser
+      // If you want user to stay logged in after register, redirect to home:
+      navigate("/");
     } catch (err) {
       const msg =
         err.response?.data?.error ||

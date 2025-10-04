@@ -2,7 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = `${API_ROOT}/api`;
 
 const StoryDetail = () => {
   const { id } = useParams();
@@ -11,15 +12,24 @@ const StoryDetail = () => {
   const [story, setStory] = useState(null);
   const [newParagraph, setNewParagraph] = useState("");
 
-  const fetchStory = () => {
-    fetch(`${API_BASE}/stories/${id}`, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setStory(data))
-      .catch((err) => console.error("Error fetching story:", err));
+  const fetchStory = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/stories/${id}`, { credentials: "include" });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status ${res.status}`);
+      }
+      const data = await res.json();
+      setStory(data);
+    } catch (err) {
+      console.error("Error fetching story:", err);
+      setStory(null);
+    }
   };
 
   useEffect(() => {
     fetchStory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // --- STORY VOTE ---

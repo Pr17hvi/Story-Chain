@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = `${API_ROOT}/api`;
 
 const Profile = () => {
   const { username } = useParams();
@@ -9,13 +10,18 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/users/${username}`, {
+      const res = await fetch(`${API_BASE}/users/${username}`, {
         credentials: "include",
       });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status ${res.status}`);
+      }
       const data = await res.json();
       setProfile(data);
     } catch (err) {
       console.error("Error fetching profile:", err);
+      setProfile(null);
     }
   };
 
@@ -49,8 +55,7 @@ const Profile = () => {
             >
               <h4 className="text-lg font-semibold">{s.title}</h4>
               <p className="text-sm text-gray-500">
-                ⭐ {s.votes} votes —{" "}
-                {new Date(s.created_at).toLocaleDateString()}
+                ⭐ {s.votes} votes — {new Date(s.created_at).toLocaleDateString()}
               </p>
             </Link>
           ))}
@@ -68,10 +73,7 @@ const Profile = () => {
               <p className="text-gray-800">{c.content}</p>
               <p className="text-xs text-gray-500 mt-2">
                 in{" "}
-                <Link
-                  to={`/stories/${c.story_id}`}
-                  className="text-indigo-600 underline"
-                >
+                <Link to={`/stories/${c.story_id}`} className="text-indigo-600 underline">
                   {c.story_title}
                 </Link>{" "}
                 — ⭐ {c.votes} votes

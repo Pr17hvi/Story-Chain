@@ -1,19 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-// 👇 Use env variable (falls back to localhost in dev)
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// API root (backend origin) — do NOT include /api in VITE_API_URL
+const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = `${API_ROOT}/api`;
 
 const Home = () => {
   const [stories, setStories] = useState([]);
   const location = useLocation();
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/stories`, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setStories(data))
-      .catch((err) => console.error("Error fetching stories:", err));
-  }, [location]); // ✅ refetch whenever route changes
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/stories`, { credentials: "include" });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `Status ${res.status}`);
+        }
+        const data = await res.json();
+        if (mounted) setStories(data);
+      } catch (err) {
+        console.error("Error fetching stories:", err);
+        if (mounted) setStories([]);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [location]);
 
   return (
     <div>
