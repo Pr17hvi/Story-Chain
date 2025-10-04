@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import db from "../db.js"; // your Postgres pool
+import db from "../db.js"; // Postgres pool
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -9,10 +9,15 @@ export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
     const existing = await db.query(
       "SELECT * FROM users WHERE username = $1 OR email = $2",
       [username, email]
     );
+
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: "User already exists" });
     }
@@ -21,13 +26,29 @@ export const register = async (req, res) => {
     const hash = await bcrypt.hash(password, salt);
 
     const newUser = await db.query(
-      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, created_at",
+      `INSERT INTO users (username, email, password) 
+       VALUES ($1, $2, $3) 
+       RETURNING id, username, email, created_at`,
       [username, email, hash]
     );
 
-    res.status(201).json({ user: newUser.rows[0] });
+    // Auto-login after registration → return cookie + user
+    const token = jwt.sign(
+      { id: newUser.rows[0].id, username: newUser.rows[0].username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res
+      .cookie("access_token", token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+      })
+      .status(201)
+      .json({ user: newUser.rows[0] });
   } catch (err) {
-    console.error("Register error:", err);
+    console.error("❌ Register error:", err.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -36,6 +57,10 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
 
     const userRes = await db.query("SELECT * FROM users WHERE username = $1", [
       username,
@@ -59,15 +84,15 @@ export const login = async (req, res) => {
     res
       .cookie("access_token", token, {
         httpOnly: true,
-        secure: isProduction, // ✅ only secure cookies in production
-        sameSite: isProduction ? "none" : "lax", // ✅ needed for cross-domain in prod
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
       })
       .status(200)
       .json({
         user: { id: user.id, username: user.username, email: user.email },
       });
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("❌ Login error:", err.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 };

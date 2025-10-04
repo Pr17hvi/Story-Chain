@@ -5,16 +5,19 @@ export const AuthContext = createContext();
 
 // 👇 Define API base dynamically (Render or local)
 const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Ensure axios always sends cookies + same base
 axios.defaults.baseURL = API_BASE;
 axios.defaults.withCredentials = true;
 
 export const AuthContextProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
+  const [currentUser, setCurrentUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      return JSON.parse(localStorage.getItem("user")) || null;
+    }
+    return null;
+  });
 
   // LOGIN
   const login = async (inputs) => {
@@ -28,10 +31,11 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
-  // REGISTER
+  // REGISTER (✅ now sets user immediately because backend issues cookie)
   const register = async (inputs) => {
     try {
       const res = await axios.post("/auth/register", inputs);
+      setCurrentUser(res.data.user); // ✅ keep user in state
       return res.data;
     } catch (err) {
       console.error("❌ Register error:", err.response?.data || err.message);
