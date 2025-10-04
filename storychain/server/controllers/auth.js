@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import db from "../db.js"; // Postgres pool
 
 const isProduction = process.env.NODE_ENV === "production";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // REGISTER
 export const register = async (req, res) => {
@@ -13,6 +14,7 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    // Check if username OR email already exists
     const existing = await db.query(
       "SELECT * FROM users WHERE username = $1 OR email = $2",
       [username, email]
@@ -32,10 +34,9 @@ export const register = async (req, res) => {
       [username, email, hash]
     );
 
-    // Auto-login after registration → return cookie + user
     const token = jwt.sign(
       { id: newUser.rows[0].id, username: newUser.rows[0].username },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "1d" }
     );
 
@@ -48,7 +49,13 @@ export const register = async (req, res) => {
       .status(201)
       .json({ user: newUser.rows[0] });
   } catch (err) {
-    console.error("❌ Register error:", err.message);
+    console.error("❌ Register error:", err.message || err);
+
+    // Handle Postgres duplicate email/username
+    if (err.code === "23505") {
+      return res.status(400).json({ error: "Email or username already registered" });
+    }
+
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -77,7 +84,7 @@ export const login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "1d" }
     );
 
@@ -92,7 +99,7 @@ export const login = async (req, res) => {
         user: { id: user.id, username: user.username, email: user.email },
       });
   } catch (err) {
-    console.error("❌ Login error:", err.message);
+    console.error("❌ Login error:", err.message || err);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
