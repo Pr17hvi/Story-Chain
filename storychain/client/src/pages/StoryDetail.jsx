@@ -125,9 +125,7 @@ const StoryDetail = () => {
     <div className="container mx-auto px-6 py-12">
       <h2 className="text-3xl font-bold text-indigo-600 mb-2">{story.title}</h2>
       <p className="text-sm text-gray-600">By {story.author}</p>
-      <p className="text-xs text-gray-500 mb-4">
-        {new Date(story.created_at).toLocaleDateString()}
-      </p>
+      <p className="text-xs text-gray-500 mb-4">{new Date(story.created_at).toLocaleDateString()}</p>
 
       <div className="flex items-center gap-4 mb-6">
         <p className="text-yellow-600 font-semibold">⭐ {story.votes} votes</p>
@@ -161,7 +159,6 @@ const StoryDetail = () => {
             <p className="text-xs text-gray-500 mt-2">
               — {p.author}, {new Date(p.created_at).toLocaleDateString()}
             </p>
-
             {currentUser && (
               <button
                 onClick={() => handleParagraphVote(p.id)}
@@ -172,7 +169,6 @@ const StoryDetail = () => {
                 {p.userHasVoted ? "Unvote" : "Vote"} ({p.votes})
               </button>
             )}
-
             {currentUser && currentUser.username === p.author && (
               <button
                 onClick={() => handleDeleteParagraph(p.id)}

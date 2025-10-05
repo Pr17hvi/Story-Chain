@@ -9,10 +9,11 @@ import { fileURLToPath } from "url";
 dotenv.config();
 const app = express();
 
+// Resolve __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Routes (these route files are provided below)
+// --- Route imports ---
 import authRoutes from "./routes/auth.js";
 import storiesRoutes from "./routes/stories.js";
 import voteRoutes from "./routes/votes.js";
@@ -25,7 +26,11 @@ const getAllowedOrigins = () => {
     return process.env.FRONTEND_URLS.split(",").map((u) => u.trim());
   }
   // local dev origins (Vite, CRA, etc.)
-  return ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"];
+  return [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+  ];
 };
 
 const allowedOrigins = getAllowedOrigins();
@@ -33,16 +38,19 @@ const allowedOrigins = getAllowedOrigins();
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (curl, Postman, server-to-server)
+      // allow requests with no origin (curl, Postman, etc.)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
-      console.warn("Blocked CORS request from:", origin);
+      console.warn("🚫 Blocked CORS request from:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// --- Middleware ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -54,32 +62,32 @@ app.use("/api/votes", voteRoutes);
 app.use("/api/paragraph-votes", paragraphVoteRoutes);
 app.use("/api/users", userRoutes);
 
-// If an API route is not matched, return JSON 404 (prevents index.html being returned)
-app.use("/api/*", (req, res) => {
-  return res.status(404).json({ error: "API route not found" });
-});
-
-// Health check
-app.get("/api/health", (req, res) =>
-  res.json({ status: "ok", message: "StoryChain backend running 🚀" })
+// --- 404 for unknown API routes ---
+app.use("/api/*", (req, res) =>
+  res.status(404).json({ error: "API route not found" })
 );
 
-// Serve frontend in production
+// --- Health check ---
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "🚀 StoryChain backend running" });
+});
+
+// --- Serve frontend in production ---
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "../client/dist");
   app.use(express.static(frontendPath));
 
-  // Only serve index.html for non-API GET requests (safe catch-all)
+  // Serve index.html for all non-API GET requests
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api")) return next();
-    return res.sendFile(path.join(frontendPath, "index.html"));
+    res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
 
-// Global error handler (returns JSON for API requests)
+// --- Global error handler ---
 app.use((err, req, res, next) => {
-  console.error("Global error handler:", err && err.message ? err.message : err);
-  if (req.path && req.path.startsWith("/api")) {
+  console.error("🔥 Global error:", err.message || err);
+  if (req.path?.startsWith("/api")) {
     return res.status(500).json({ error: err.message || "Server error" });
   }
   next(err);
@@ -88,5 +96,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log("Allowed CORS origins:", allowedOrigins.join(", "));
+  console.log("🌍 Allowed origins:", allowedOrigins.join(", "));
 });

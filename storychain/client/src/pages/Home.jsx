@@ -1,24 +1,19 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../utils/apiClient";
-import { AuthContext } from "../context/authContext";
 
 const Home = () => {
   const [stories, setStories] = useState([]);
   const location = useLocation();
-  const { token } = useContext(AuthContext);
 
   useEffect(() => {
-    if (token === undefined) return; // wait for AuthContext init
-
     let mounted = true;
     (async () => {
       try {
+        const token = localStorage.getItem("access_token");
         const res = await fetch(`${API_BASE}/stories`, {
           credentials: "include",
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
+          headers: { Authorization: token ? `Bearer ${token}` : "" },
         });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
@@ -28,20 +23,16 @@ const Home = () => {
         if (mounted) setStories([]);
       }
     })();
-
     return () => {
       mounted = false;
     };
-  }, [location, token]);
+  }, [location]);
 
   return (
     <div>
-      {/* Hero Section */}
       <section className="bg-indigo-600 text-white py-20 text-center">
         <h1 className="text-5xl font-bold mb-6">Welcome to StoryChain</h1>
-        <p className="text-lg mb-6">
-          Collaboratively create and vote on amazing stories.
-        </p>
+        <p className="text-lg mb-6">Collaboratively create and vote on amazing stories.</p>
         <div className="flex justify-center gap-4">
           <Link to="/write" className="px-6 py-3 bg-white text-indigo-600 rounded-lg shadow hover:bg-gray-200">
             ✍️ Start Writing
@@ -52,10 +43,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Story Feed */}
       <div className="container mx-auto px-6 py-12">
         <h2 className="text-3xl font-bold mb-6">📚 Latest Stories</h2>
-
         {stories.length === 0 ? (
           <p className="text-gray-500">No stories yet. Be the first to write one!</p>
         ) : (
@@ -64,9 +53,7 @@ const Home = () => {
               <div key={story.id} className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition">
                 <h3 className="text-lg font-bold text-indigo-600">{story.title}</h3>
                 <p className="mt-2 text-sm text-gray-600">By {story.author}</p>
-                <p className="mt-1 text-xs text-gray-500">
-                  {new Date(story.created_at).toLocaleDateString()}
-                </p>
+                <p className="mt-1 text-xs text-gray-500">{new Date(story.created_at).toLocaleDateString()}</p>
                 <p className="mt-2 text-sm text-gray-700">⭐ {story.votes} votes</p>
                 <Link to={`/stories/${story.id}`} className="mt-4 inline-block text-indigo-600 text-sm hover:underline">
                   Read More →

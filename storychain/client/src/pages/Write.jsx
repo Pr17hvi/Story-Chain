@@ -20,13 +20,13 @@ const Write = () => {
     try {
       const res = await fetch(`${API_BASE}/stories`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify(inputs),
       });
-
       if (!res.ok) throw new Error((await res.json()).error || "Failed to create story");
       const data = await res.json();
       navigate(`/stories/${data.id}`);
@@ -36,15 +36,12 @@ const Write = () => {
     }
   };
 
-  if (!currentUser) {
+  if (!currentUser)
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-700 text-lg">
-          🚫 You must be logged in to write a story.
-        </p>
+        <p className="text-gray-700 text-lg">🚫 You must be logged in to write a story.</p>
       </div>
     );
-  }
 
   return (
     <div className="container mx-auto px-6 py-12 max-w-3xl">
