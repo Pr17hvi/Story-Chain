@@ -1,3 +1,5 @@
+
+// server/controllers/paragraphVotes.js
 import db from "../db.js";
 import jwt from "jsonwebtoken";
 
@@ -5,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export const toggleParagraphVote = async (req, res) => {
   try {
-    const token = req.cookies?.access_token;
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
     let decoded;
@@ -58,3 +60,4 @@ export const toggleParagraphVote = async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
+

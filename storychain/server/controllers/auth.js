@@ -1,9 +1,11 @@
+
+// server/controllers/auth.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../db.js";
 
 const isProduction = process.env.NODE_ENV === "production";
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
 
 // --- REGISTER ---
 export const register = async (req, res) => {
@@ -111,3 +113,28 @@ export const logout = (req, res) => {
     .status(200)
     .json({ message: "Logged out successfully" });
 };
+
+// --- optional: get current user from token ---
+export const me = async (req, res) => {
+  try {
+    // If verifyToken middleware used, req.user will be available
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ error: "Not authenticated" });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch {
+      return res.status(403).json({ error: "Invalid or expired token" });
+    }
+
+    const userRes = await db.query("SELECT id, username, email, created_at FROM users WHERE id = $1", [decoded.id]);
+    if (userRes.rows.length === 0) return res.status(404).json({ error: "User not found" });
+
+    res.json({ user: userRes.rows[0] });
+  } catch (err) {
+    console.error("❌ /auth/me error:", err);
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+};
+

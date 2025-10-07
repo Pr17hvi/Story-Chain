@@ -1,6 +1,8 @@
-import React, { useState, useContext } from "react";
-import { AuthContext } from "../context/authContext";
+
+// client/src/pages/Write.jsx
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/authContext";
 import { API_BASE } from "../utils/apiClient";
 
 const Write = () => {
@@ -27,21 +29,31 @@ const Write = () => {
         },
         body: JSON.stringify(inputs),
       });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed to create story");
-      const data = await res.json();
-      navigate(`/stories/${data.id}`);
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (!res.ok) {
+        const errMsg = (data && (data.error || data.message)) || "Failed to create story";
+        throw new Error(errMsg);
+      }
+
+      // backend might return { story: {...} } or the story object
+      const story = data?.story ?? data;
+      navigate(`/stories/${story.id}`);
     } catch (err) {
       console.error("Error creating story:", err);
       setError(err.message);
     }
   };
 
-  if (!currentUser)
+  if (!currentUser) {
     return (
       <div className="flex justify-center items-center h-screen">
         <p className="text-gray-700 text-lg">🚫 You must be logged in to write a story.</p>
       </div>
     );
+  }
 
   return (
     <div className="container mx-auto px-6 py-12 max-w-3xl">
@@ -81,3 +93,4 @@ const Write = () => {
 };
 
 export default Write;
+

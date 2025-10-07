@@ -1,3 +1,5 @@
+
+// server/controllers/stories.js
 import db from "../db.js";
 import jwt from "jsonwebtoken";
 
@@ -80,7 +82,7 @@ export const getStoryById = async (req, res) => {
 // 📌 Create story + first paragraph
 export const createStory = async (req, res) => {
   try {
-    const token = req.cookies?.access_token;
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
     let decoded;
@@ -123,7 +125,7 @@ export const createStory = async (req, res) => {
 // 📌 Add paragraph to story
 export const addParagraph = async (req, res) => {
   try {
-    const token = req.cookies?.access_token;
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
     let decoded;
@@ -167,7 +169,7 @@ export const addParagraph = async (req, res) => {
 // 📌 Delete story (author only)
 export const deleteStory = async (req, res) => {
   try {
-    const token = req.cookies?.access_token;
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
     let decoded;
@@ -197,7 +199,7 @@ export const deleteStory = async (req, res) => {
 // 📌 Delete paragraph (author only)
 export const deleteParagraph = async (req, res) => {
   try {
-    const token = req.cookies?.access_token;
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
     let decoded;
@@ -223,3 +225,4 @@ export const deleteParagraph = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+

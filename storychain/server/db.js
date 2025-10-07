@@ -1,4 +1,5 @@
-// db.js
+
+// server/db.js
 import pkg from "pg";
 import dotenv from "dotenv";
 
@@ -47,3 +48,4 @@ process.on("SIGINT", async () => {
 });
 
 export default db;
+

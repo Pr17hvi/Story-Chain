@@ -1,4 +1,5 @@
-// server.js
+
+// server/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -38,7 +39,7 @@ const allowedOrigins = getAllowedOrigins();
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (curl, Postman, etc.)
+      // allow requests with no origin (curl, Postman, server-to-server)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       console.warn("🚫 Blocked CORS request from:", origin);
@@ -98,3 +99,4 @@ app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log("🌍 Allowed origins:", allowedOrigins.join(", "));
 });
+

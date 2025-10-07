@@ -1,9 +1,11 @@
+
+// server/routes/paragraphVotes.js
 import express from "express";
-import { toggleParagraphVote } from "../controllers/paragraphVotes.js";  // ✅ fixed path
-import verifyToken from "../middleware/verifyToken.js";
+import { toggleParagraphVote } from "../controllers/paragraphVotes.js";
 
 const router = express.Router();
 
-router.post("/:id", verifyToken, toggleParagraphVote);
+router.post("/:id", toggleParagraphVote);
 
 export default router;
+

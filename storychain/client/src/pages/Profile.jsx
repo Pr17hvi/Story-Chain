@@ -1,3 +1,5 @@
+
+// client/src/pages/Profile.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API_BASE } from "../utils/apiClient";
@@ -10,15 +12,24 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${API_BASE}/users/${username}`, {
+      const res = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
         credentials: "include",
         headers: {
           Authorization: token ? `Bearer ${token}` : "",
         },
       });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      setProfile(data);
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (!res.ok) {
+        const errMsg = (data && (data.error || data.message)) || "Failed to fetch profile";
+        throw new Error(errMsg);
+      }
+
+      // server might return { user: ..., stories: [...], contributions: [...] }
+      const payload = data?.user ? data : { user: data, stories: data?.stories ?? [], contributions: data?.contributions ?? [] };
+      setProfile(payload);
     } catch (err) {
       console.error("Error fetching profile:", err);
       setProfile(null);
@@ -26,7 +37,9 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    if (!username) return;
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username, token]);
 
   if (!profile) return <p className="text-center mt-10">Loading profile...</p>;
@@ -54,7 +67,7 @@ const Profile = () => {
             >
               <h4 className="text-lg font-semibold">{s.title}</h4>
               <p className="text-sm text-gray-500">
-                ⭐ {s.votes} votes — {new Date(s.created_at).toLocaleDateString()}
+                ⭐ {s.votes ?? 0} votes — {new Date(s.created_at).toLocaleDateString()}
               </p>
             </Link>
           ))}
@@ -75,7 +88,7 @@ const Profile = () => {
                 <Link to={`/stories/${c.story_id}`} className="text-indigo-600 underline">
                   {c.story_title}
                 </Link>{" "}
-                — ⭐ {c.votes} votes
+                — ⭐ {c.votes ?? 0} votes
               </p>
             </div>
           ))}
@@ -86,3 +99,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

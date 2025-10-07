@@ -1,3 +1,5 @@
+
+// client/src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { API_BASE } from "../utils/apiClient";
@@ -15,9 +17,20 @@ const Home = () => {
           credentials: "include",
           headers: { Authorization: token ? `Bearer ${token}` : "" },
         });
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-        if (mounted) setStories(data);
+
+        // robust JSON parsing
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+
+        if (!res.ok) {
+          // server sent an error message
+          const errMsg = (data && (data.error || data.message)) || text || "Failed to fetch stories";
+          throw new Error(errMsg);
+        }
+
+        // backend might return { stories: [...] } or an array directly
+        const list = Array.isArray(data) ? data : data?.stories ?? [];
+        if (mounted) setStories(list);
       } catch (err) {
         console.error("Error fetching stories:", err);
         if (mounted) setStories([]);
@@ -54,7 +67,7 @@ const Home = () => {
                 <h3 className="text-lg font-bold text-indigo-600">{story.title}</h3>
                 <p className="mt-2 text-sm text-gray-600">By {story.author}</p>
                 <p className="mt-1 text-xs text-gray-500">{new Date(story.created_at).toLocaleDateString()}</p>
-                <p className="mt-2 text-sm text-gray-700">⭐ {story.votes} votes</p>
+                <p className="mt-2 text-sm text-gray-700">⭐ {story.votes ?? 0} votes</p>
                 <Link to={`/stories/${story.id}`} className="mt-4 inline-block text-indigo-600 text-sm hover:underline">
                   Read More →
                 </Link>
@@ -68,3 +81,4 @@ const Home = () => {
 };
 
 export default Home;
+

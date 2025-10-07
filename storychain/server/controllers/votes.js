@@ -1,3 +1,5 @@
+
+// server/controllers/votes.js
 import db from "../db.js";
 import jwt from "jsonwebtoken";
 
@@ -6,10 +8,16 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Toggle vote (upvote/unvote)
 export const toggleVote = async (req, res) => {
   try {
-    const token = req.cookies.access_token;
+    const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch {
+      return res.status(403).json({ error: "Invalid or expired token" });
+    }
+
     const userId = decoded.id;
     const { id } = req.params;
     const storyId = parseInt(id, 10);
@@ -51,3 +59,4 @@ export const toggleVote = async (req, res) => {
     res.status(500).json({ error: "Failed to toggle vote" });
   }
 };
+

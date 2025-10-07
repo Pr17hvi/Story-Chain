@@ -1,3 +1,5 @@
+
+// server/controllers/users.js
 import db from "../db.js";
 
 // Get a user profile with stories + contributions
@@ -49,3 +51,4 @@ export const getUserProfile = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user profile" });
   }
 };
+
