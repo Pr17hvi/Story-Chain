@@ -1,32 +1,32 @@
-
 // client/src/pages/Profile.jsx
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API_BASE } from "../utils/apiClient";
-import { AuthContext } from "../context/authContext";
 
 const Profile = () => {
   const { username } = useParams();
   const [profile, setProfile] = useState(null);
-  useContext(AuthContext);
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${API_BASE}/users/${encodeURIComponent(username)}`,
+        {
+          credentials: "include",
+        }
+      );
 
       const text = await res.text();
       const data = text ? JSON.parse(text) : null;
 
       if (!res.ok) {
-        const errMsg = (data && (data.error || data.message)) || "Failed to fetch profile";
+        const errMsg =
+          (data && (data.error || data.message)) ||
+          "Failed to fetch profile";
         throw new Error(errMsg);
       }
 
-      // server might return { user: ..., stories: [...], contributions: [...] }
-      const payload = data?.user ? data : { user: data, stories: data?.stories ?? [], contributions: data?.contributions ?? [] };
-      setProfile(payload);
+      setProfile(data);
     } catch (err) {
       console.error("Error fetching profile:", err);
       setProfile(null);
@@ -36,8 +36,7 @@ const Profile = () => {
   useEffect(() => {
     if (!username) return;
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username, token]);
+  }, [username]); // ✅ removed token dependency
 
   if (!profile) return <p className="text-center mt-10">Loading profile...</p>;
 
@@ -47,10 +46,10 @@ const Profile = () => {
         {profile.user.username}’s Profile
       </h2>
       <p className="text-gray-600 mb-6">
-        Joined {new Date(profile.user.created_at).toLocaleDateString()}
+        Joined{" "}
+        {new Date(profile.user.created_at).toLocaleDateString()}
       </p>
 
-      {/* Stories */}
       <h3 className="text-2xl font-semibold mb-4">📝 Stories</h3>
       {profile.stories.length === 0 ? (
         <p className="text-gray-500 mb-6">No stories yet.</p>
@@ -64,14 +63,14 @@ const Profile = () => {
             >
               <h4 className="text-lg font-semibold">{s.title}</h4>
               <p className="text-sm text-gray-500">
-                ⭐ {s.votes ?? 0} votes — {new Date(s.created_at).toLocaleDateString()}
+                ⭐ {s.votes ?? 0} votes —{" "}
+                {new Date(s.created_at).toLocaleDateString()}
               </p>
             </Link>
           ))}
         </div>
       )}
 
-      {/* Contributions */}
       <h3 className="text-2xl font-semibold mb-4">✍️ Contributions</h3>
       {profile.contributions.length === 0 ? (
         <p className="text-gray-500">No contributions yet.</p>
@@ -82,7 +81,10 @@ const Profile = () => {
               <p className="text-gray-800">{c.content}</p>
               <p className="text-xs text-gray-500 mt-2">
                 in{" "}
-                <Link to={`/stories/${c.story_id}`} className="text-indigo-600 underline">
+                <Link
+                  to={`/stories/${c.story_id}`}
+                  className="text-indigo-600 underline"
+                >
                   {c.story_title}
                 </Link>{" "}
                 — ⭐ {c.votes ?? 0} votes
@@ -96,4 +98,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
