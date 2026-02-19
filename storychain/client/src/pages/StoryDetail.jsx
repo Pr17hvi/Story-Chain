@@ -8,7 +8,7 @@ import { API_BASE } from "../utils/apiClient";
 const StoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser, token } = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext);
   const [story, setStory] = useState(null);
   const [newParagraph, setNewParagraph] = useState("");
 
@@ -16,7 +16,6 @@ const StoryDetail = () => {
     try {
       const res = await fetch(`${API_BASE}/stories/${id}`, {
         credentials: "include",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
 
       const text = await res.text();
@@ -57,7 +56,6 @@ const StoryDetail = () => {
       const res = await fetch(`${API_BASE}/votes/${id}`, {
         method: "POST",
         credentials: "include",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
 
       const text = await res.text();
@@ -84,7 +82,6 @@ const StoryDetail = () => {
       const res = await fetch(`${API_BASE}/paragraph-votes/${paraId}`, {
         method: "POST",
         credentials: "include",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       const text = await res.text();
       const data = text ? JSON.parse(text) : null;
@@ -110,7 +107,6 @@ const StoryDetail = () => {
       const res = await fetch(`${API_BASE}/stories/${id}`, {
         method: "DELETE",
         credentials: "include",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
 
       if (res.ok) navigate("/");
@@ -129,7 +125,6 @@ const StoryDetail = () => {
       const res = await fetch(`${API_BASE}/stories/paragraphs/${paraId}`, {
         method: "DELETE",
         credentials: "include",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (res.ok) fetchStory();
       else {

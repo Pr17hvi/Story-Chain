@@ -8,15 +8,12 @@ import { AuthContext } from "../context/authContext";
 const Profile = () => {
   const { username } = useParams();
   const [profile, setProfile] = useState(null);
-  const { token } = useContext(AuthContext);
+  useContext(AuthContext);
 
   const fetchProfile = async () => {
     try {
       const res = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
         credentials: "include",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
       });
 
       const text = await res.text();

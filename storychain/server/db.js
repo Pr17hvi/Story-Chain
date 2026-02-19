@@ -13,7 +13,7 @@ if (process.env.DATABASE_URL) {
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
   });
-  console.log("🌐 Using production database connection");
+  console.log(" Using production database connection");
 } else {
   db = new Pool({
     user: process.env.DB_USER || "postgres",
@@ -23,26 +23,26 @@ if (process.env.DATABASE_URL) {
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
     ssl: false,
   });
-  console.log("💻 Using local database connection");
+  console.log(" Using local database connection");
 }
 
 // Test connection once at startup
 (async () => {
   try {
     const res = await db.query("SELECT NOW()");
-    console.log("✅ Connected to PostgreSQL at:", res.rows[0].now);
+    console.log("Connected to PostgreSQL at:", res.rows[0].now);
   } catch (err) {
-    console.error("❌ Database connection error:", err.message || err);
+    console.error(" Database connection error:", err.message || err);
   }
 })();
 
 process.on("SIGINT", async () => {
   try {
     await db.end();
-    console.log("🔌 Database pool closed");
+    console.log(" Database pool closed");
     process.exit(0);
   } catch (err) {
-    console.error("⚠️ Error closing database pool:", err.message || err);
+    console.error(" Error closing database pool:", err.message || err);
     process.exit(1);
   }
 });

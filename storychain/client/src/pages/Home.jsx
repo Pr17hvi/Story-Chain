@@ -12,11 +12,9 @@ const Home = () => {
     let mounted = true;
     (async () => {
       try {
-        const token = localStorage.getItem("access_token");
         const res = await fetch(`${API_BASE}/stories`, {
-          credentials: "include",
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-        });
+        credentials: "include",
+      });
 
         // robust JSON parsing
         const text = await res.text();
@@ -51,13 +49,13 @@ const Home = () => {
             ✍️ Start Writing
           </Link>
           <Link to="/register" className="px-6 py-3 bg-indigo-800 text-white rounded-lg shadow hover:bg-indigo-900">
-            🚀 Join Now
+             Join Now
           </Link>
         </div>
       </section>
 
       <div className="container mx-auto px-6 py-12">
-        <h2 className="text-3xl font-bold mb-6">📚 Latest Stories</h2>
+        <h2 className="text-3xl font-bold mb-6"> Latest Stories</h2>
         {stories.length === 0 ? (
           <p className="text-gray-500">No stories yet. Be the first to write one!</p>
         ) : (

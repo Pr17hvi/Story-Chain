@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// 📌 Get all stories with author + votes
+//  Get all stories with author + votes
 export const getStories = async (req, res) => {
   try {
     const query = `
@@ -23,7 +23,7 @@ export const getStories = async (req, res) => {
   }
 };
 
-// 📌 Get story by ID with paragraphs + votes + userHasVoted
+//  Get story by ID with paragraphs + votes + userHasVoted
 export const getStoryById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -74,12 +74,12 @@ export const getStoryById = async (req, res) => {
 
     return res.json(story);
   } catch (err) {
-    console.error("❌ Error fetching story by id:", err.message || err);
+    console.error(" Error fetching story by id:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// 📌 Create story + first paragraph
+//  Create story + first paragraph
 export const createStory = async (req, res) => {
   try {
     const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
@@ -117,12 +117,12 @@ export const createStory = async (req, res) => {
       firstParagraph: paraResult.rows[0],
     });
   } catch (err) {
-    console.error("❌ Error creating story:", err.message || err);
+    console.error(" Error creating story:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// 📌 Add paragraph to story
+//  Add paragraph to story
 export const addParagraph = async (req, res) => {
   try {
     const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
@@ -161,12 +161,12 @@ export const addParagraph = async (req, res) => {
 
     return res.status(201).json(paraWithMeta.rows[0]);
   } catch (err) {
-    console.error("❌ Error adding paragraph:", err.message || err);
+    console.error(" Error adding paragraph:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// 📌 Delete story (author only)
+//  Delete story (author only)
 export const deleteStory = async (req, res) => {
   try {
     const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
@@ -191,12 +191,12 @@ export const deleteStory = async (req, res) => {
     await db.query("DELETE FROM stories WHERE id = $1", [id]);
     return res.json({ message: "Story deleted successfully" });
   } catch (err) {
-    console.error("❌ Error deleting story:", err.message || err);
+    console.error(" Error deleting story:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// 📌 Delete paragraph (author only)
+//  Delete paragraph (author only)
 export const deleteParagraph = async (req, res) => {
   try {
     const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
@@ -221,7 +221,7 @@ export const deleteParagraph = async (req, res) => {
     await db.query("DELETE FROM paragraphs WHERE id = $1", [id]);
     return res.json({ message: "Paragraph deleted successfully" });
   } catch (err) {
-    console.error("❌ Error deleting paragraph:", err.message || err);
+    console.error(" Error deleting paragraph:", err.message || err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

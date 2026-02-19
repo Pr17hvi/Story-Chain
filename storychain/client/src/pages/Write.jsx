@@ -6,7 +6,7 @@ import { AuthContext } from "../context/authContext";
 import { API_BASE } from "../utils/apiClient";
 
 const Write = () => {
-  const { currentUser, token } = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext);
   const [inputs, setInputs] = useState({ title: "", content: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -21,14 +21,13 @@ const Write = () => {
 
     try {
       const res = await fetch(`${API_BASE}/stories`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify(inputs),
-      });
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(inputs),
+    });
 
       const text = await res.text();
       const data = text ? JSON.parse(text) : null;
